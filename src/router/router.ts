@@ -27,7 +27,7 @@ router.patch('/update', async (ctx: any, next: Next) => {
     // } else {
     //     ctx.body = 'Fail';
     // }
-    ctx.response.body = result.data();
+    // ctx.response.body = result.data();
     await next();
 });
 

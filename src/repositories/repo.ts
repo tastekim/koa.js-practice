@@ -26,20 +26,28 @@ class Firebase {
         return dataList;
     };
 
-    updateData = async (data: any) => {
-        for (let prop in data) {
-            if(prop !== 'name') {
-                await firebase.collection('users').doc(data.name).set({
-                    [`${prop}`] : data[prop]
-                }, { merge : true });
-            }
+    updateData = async (newData: any) => {
+        // 방법 1.
+        // for (let prop in data) {
+        //     if(prop !== 'name') {
+        //         await firebase.collection('users').doc(data.name).set({
+        //             [`${prop}`] : data[prop]
+        //         }, { merge : true });
+        //     }
+        // }
+        // 방법 2.
+        // const userData: any = (await firebase.collection('users').doc(newData.name).get()).data();
+        // return await firebase.collection('users').doc(newData.name).update({
+        //     age : newData.age ??= userData.age,
+        //     address : newData.address ??= userData.address,
+        //     nickname : newData.nickname ??= userData.nickname
+        // });
+        // 방법 3.
+        let refData: any = {};
+        for (const prop in newData) {
+            if (prop !== 'name') refData[prop] = newData[prop];
         }
-        return await firebase.collection('users').doc(data.name).get();
-        // return await firebase.collection('users').doc(data.name).set({
-        //     age : data.age,
-        //     address : data.address,
-        //     nickname : data.nickname
-        // }, { merge : true });
+        return await firebase.collection('users').doc(newData.name).update(refData);
     };
 
     deleteData = async (userName: string) => {
