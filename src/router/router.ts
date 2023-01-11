@@ -1,21 +1,33 @@
 import { Context, Next } from 'koa';
 import { firestore } from 'firebase-admin';
 import WriteResult = firestore.WriteResult;
-import { MinLength } from '../dto/person';
+import { MinLength, isNum, isKorean, isNickname } from '../dto/person-decorator';
 import { validator } from '../modules/validator';
 
 const Router = require('@koa/router');
 const router = new Router();
 const db = require('../repositories/repo');
 
-// validation 에 쓰일 클래스
+// 입력된 데이터의 validation 에 쓰일 클래스
 class Person {
     constructor(userInfo: any) {
         this.name = userInfo.name;
+        this.age = userInfo.age;
+        this.address = userInfo.address;
+        this.nickname = userInfo.nickname;
     }
 
-    @MinLength(2)
+    @MinLength(4)
     public name: string;
+
+    @isNum()
+    public age: number;
+
+    @isKorean()
+    public address: string;
+
+    @isNickname()
+    public nickname: string;
 }
 
 router.get('/', async (ctx: Context, next: Next) => {
@@ -44,7 +56,7 @@ router.post('/create', async (ctx: any, next: Next) => {
     const userInfo: Person = ctx.request.body;
     try {
         // 방법 1. validator 를 decorator 를 이용해서 만들어보기
-        const inputValue: any = new Person(userInfo);
+        const inputValue = new Person(userInfo);
         validator(inputValue);
 
         // 방법 2. interface 를 이용해서 만들어보기 => 런타임중엔 코드상에 인터페이스라는게 남아있지 않아서 실행 중 들어오는 데이터를 인터페이스가 확인해주질 못함.
@@ -53,8 +65,12 @@ router.post('/create', async (ctx: any, next: Next) => {
         //     throw new Error('validation Error => isMinLength')
         // }
 
-        const result: WriteResult = await db.setData(userInfo);
-        ctx.response.body = result.writeTime ? 'Created' : 'failed';
+        const result = await db.setData(userInfo);
+        if(result.writeTime) {
+            ctx.response.body = 'Create Success';
+        } else {
+            throw result;
+        }
         await next();
     } catch (err: unknown) {
         if (err instanceof Error) {

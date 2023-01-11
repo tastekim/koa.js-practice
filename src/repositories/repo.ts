@@ -11,11 +11,17 @@ interface User {
 // 'users' collection 에 'data.name'(이름)으로 doc 관리.
 class Firebase {
     setData = async (data: User) => {
-        return await firebase.collection('users').doc(data.name).set({
-            age : data.age,
-            address : data.address,
-            nickname : data.nickname
-        });
+        const userRef = firebase.collection('users').doc(data.name);
+        const doc = await userRef.get();
+        if (!doc.exists) {
+            return userRef.set({
+                age : data.age,
+                address : data.address,
+                nickname : data.nickname
+            });
+        } else {
+            throw new Error('Create Error => already exists');
+        }
     };
 
     getAllData = async () => {
