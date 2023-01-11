@@ -69,7 +69,6 @@ class Firebase {
             for (const prop in newData) {
                 if (prop !== 'name') updateData[prop] = newData[prop];
             }
-            console.log(updateData)
             return await userRef.update(updateData);
         } catch (err: unknown) {
             if (err instanceof Error) return err;

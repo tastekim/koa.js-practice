@@ -1,6 +1,7 @@
 import { Context, Next } from 'koa';
 import { MinLength, isNum, isKorean, isNickname } from '../dto/person-decorator';
 import { validator } from '../modules/validator';
+import koaBody from 'koa-body';
 
 const Router = require('@koa/router');
 const router = new Router();
@@ -50,7 +51,7 @@ router.get('/', async (ctx: Context, next: Next) => {
 
 });
 
-router.post('/create', async (ctx: any, next: Next) => {
+router.post('/create', async (ctx: Context, next: Next) => {
     const userInfo: Person = ctx.request.body;
     try {
         // 방법 1. validator 를 decorator 를 이용해서 만들어보기
@@ -64,7 +65,7 @@ router.post('/create', async (ctx: any, next: Next) => {
         // }
 
         const result = await db.setData(userInfo);
-        if(result.writeTime) {
+        if (result.writeTime) {
             ctx.response.body = 'Create Success';
         } else {
             throw result;
@@ -79,10 +80,10 @@ router.post('/create', async (ctx: any, next: Next) => {
     }
 });
 
-router.patch('/update', async (ctx: any, next: Next) => {
+router.patch('/update', async (ctx: Context, next: Next) => {
     try {
         const result = await db.updateData(ctx.request.body);
-        if(result.writeTime) {
+        if (result.writeTime) {
             ctx.response.body = 'Update Success';
         } else {
             throw result;
@@ -97,11 +98,11 @@ router.patch('/update', async (ctx: any, next: Next) => {
     }
 });
 
-router.delete('/delete', async (ctx: any, next: Next) => {
+router.delete('/delete', async (ctx: Context, next: Next) => {
     try {
-        console.log(ctx)
-        const result = await db.deleteData(ctx.request.body.name);
-        if(result.writeTime) {
+        console.log(ctx.request.body); // 갑자기 body를 받지를 못함.
+        const result = await db.deleteData(ctx.request);
+        if (result.writeTime) {
             ctx.response.body = 'Delete Success';
         } else {
             throw result;

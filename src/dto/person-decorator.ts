@@ -85,7 +85,6 @@ export function isNickname() {
         const regExp = new RegExp('[a-zA-Z0-9]');
 
         function validate() {
-            console.log(typeof value)
             if (!regExp.test(value) || typeof value === 'undefined') {
                 throw new Error('validation Error => isNickname');
             }
