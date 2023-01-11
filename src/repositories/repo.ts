@@ -1,5 +1,4 @@
 const firebase = require('./index');
-const errorHandler = require('../middlewares/errorHandler');
 
 interface User {
     name: string;
@@ -11,62 +10,85 @@ interface User {
 // 'users' collection 에 'data.name'(이름)으로 doc 관리.
 class Firebase {
     setData = async (data: User) => {
-        const userRef = firebase.collection('users').doc(data.name);
-        const doc = await userRef.get();
-        if (!doc.exists) {
-            return userRef.set({
-                age : data.age,
-                address : data.address,
-                nickname : data.nickname
-            });
-        } else {
-            throw new Error('Create Error => already exists');
+        try {
+            const userRef = firebase.collection('users').doc(data.name);
+            const doc = await userRef.get();
+            // DB 에 데이터 유무 확인 후 저장
+            if (!doc.exists) {
+                return userRef.set({
+                    age : data.age,
+                    address : data.address,
+                    nickname : data.nickname
+                });
+            } else {
+                throw new Error('Create Error => already exists');
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) return err;
         }
     };
 
     getAllData = async () => {
         try {
             const dataList = await firebase.collection('users').get();
-            // if (dataList.empty) {
-            //     return new errorHandler(
-            //         'dataList is empty.',
-            //         '조회할 데이터 목록이 없습니다.',
-            //         500
-            //     )
-            // }
+            if (dataList.empty) {
+                throw new Error('Not exists any Data');
+            }
             return dataList;
-        } catch (err: any) {
-
+        } catch (err: unknown) {
+            if (err instanceof Error) return err;
         }
 
     };
 
     updateData = async (newData: any) => {
-        // 방법 1.
-        // for (let prop in data) {
-        //     if(prop !== 'name') {
-        //         await firebase.collection('users').doc(data.name).set({
-        //             [`${prop}`] : data[prop]
-        //         }, { merge : true });
-        //     }
-        // }
-        // 방법 2.
-        // const userData: any = (await firebase.collection('users').doc(newData.name).get()).data();
-        // return await firebase.collection('users').doc(newData.name).update({
-        //     age : newData.age ??= userData.age,
-        //     address : newData.address ??= userData.address,
-        //     nickname : newData.nickname ??= userData.nickname
-        // });
-        // 방법 3. 이거다 !
-        let refData: any = {};
-        for (const prop in newData) {
-            if (prop !== 'name') refData[prop] = newData[prop];
+        try {
+            // 방법 1.
+            // for (let prop in data) {
+            //     if(prop !== 'name') {
+            //         await firebase.collection('users').doc(data.name).set({
+            //             [`${prop}`] : data[prop]
+            //         }, { merge : true });
+            //     }
+            // }
+            // 방법 2.
+            // const userData: any = (await firebase.collection('users').doc(newData.name).get()).data();
+            // return await firebase.collection('users').doc(newData.name).update({
+            //     age : newData.age ??= userData.age,
+            //     address : newData.address ??= userData.address,
+            //     nickname : newData.nickname ??= userData.nickname
+            // });
+            // 방법 3. 이거다 !
+            const userRef = firebase.collection('users').doc(newData.name);
+
+            // 수정 전 유저정보 유무 확인
+            const doc = await userRef.get();
+            if (!doc.exists) throw new Error('Username is not exists');
+
+            let updateData: any = {};
+            for (const prop in newData) {
+                if (prop !== 'name') updateData[prop] = newData[prop];
+            }
+            console.log(updateData)
+            return await userRef.update(updateData);
+        } catch (err: unknown) {
+            if (err instanceof Error) return err;
         }
-        return await firebase.collection('users').doc(newData.name).update(refData);
+
     };
 
     deleteData = async (userName: string) => {
-        return await firebase.collection('users').doc(userName).delete();
+        try {
+            const userRef = firebase.collection('users').doc(userName);
+
+            // 삭제 전 유저정보 유무 확인
+            const doc = await userRef.get();
+            if (!doc.exists) throw new Error('Username is not exists');
+
+            return await userRef.delete();
+        } catch (err: unknown) {
+            if (err instanceof Error) return err;
+        }
     };
 }
 

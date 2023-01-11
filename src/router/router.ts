@@ -1,6 +1,4 @@
 import { Context, Next } from 'koa';
-import { firestore } from 'firebase-admin';
-import WriteResult = firestore.WriteResult;
 import { MinLength, isNum, isKorean, isNickname } from '../dto/person-decorator';
 import { validator } from '../modules/validator';
 
@@ -83,8 +81,12 @@ router.post('/create', async (ctx: any, next: Next) => {
 
 router.patch('/update', async (ctx: any, next: Next) => {
     try {
-        const result: WriteResult = await db.updateData(ctx.request.body);
-        ctx.response.body = result.writeTime ? 'update' : 'failed';
+        const result = await db.updateData(ctx.request.body);
+        if(result.writeTime) {
+            ctx.response.body = 'Update Success';
+        } else {
+            throw result;
+        }
         await next();
     } catch (err: unknown) {
         if (err instanceof Error) {
@@ -97,8 +99,13 @@ router.patch('/update', async (ctx: any, next: Next) => {
 
 router.delete('/delete', async (ctx: any, next: Next) => {
     try {
-        const result: WriteResult = await db.deleteData(ctx.request.body.name);
-        ctx.response.body = result.writeTime ? 'Success' : 'Failed';
+        console.log(ctx)
+        const result = await db.deleteData(ctx.request.body.name);
+        if(result.writeTime) {
+            ctx.response.body = 'Delete Success';
+        } else {
+            throw result;
+        }
         await next();
     } catch (err: unknown) {
         if (err instanceof Error) {
