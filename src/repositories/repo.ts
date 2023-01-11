@@ -1,4 +1,5 @@
 const firebase = require('./index');
+const errorHandler = require('../middlewares/errorHandler');
 
 interface User {
     name: string;
@@ -18,12 +19,20 @@ class Firebase {
     };
 
     getAllData = async () => {
-        const dataList = await firebase.collection('users').get();
-        if (dataList.empty) {
-            console.log('No data');
-            return;
+        try {
+            const dataList = await firebase.collection('users').get();
+            // if (dataList.empty) {
+            //     return new errorHandler(
+            //         'dataList is empty.',
+            //         '조회할 데이터 목록이 없습니다.',
+            //         500
+            //     )
+            // }
+            return dataList;
+        } catch (err: any) {
+
         }
-        return dataList;
+
     };
 
     updateData = async (newData: any) => {
@@ -42,7 +51,7 @@ class Firebase {
         //     address : newData.address ??= userData.address,
         //     nickname : newData.nickname ??= userData.nickname
         // });
-        // 방법 3.
+        // 방법 3. 이거다 !
         let refData: any = {};
         for (const prop in newData) {
             if (prop !== 'name') refData[prop] = newData[prop];
