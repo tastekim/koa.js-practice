@@ -1,5 +1,5 @@
 import { Context, Next } from 'koa';
-import { MinLength, isNum, isKorean, isNickname } from '../dto/person-decorator';
+import { MinLength, isNum, isKorean, isNickname } from '../decorator/person-decorator';
 import { validator } from '../modules/validator';
 import koaBody from 'koa-body';
 
@@ -31,7 +31,11 @@ class Person {
 
 router.get('/', async (ctx: Context, next: Next) => {
     try {
-        const docs: object[] = await db.getAllData();
+        const docs: any = await db.getAllData();
+        if (docs instanceof Error) {
+            ctx.status = 204;
+            ctx.throw(docs.message);
+        }
         let list: any[] = [];
         docs.forEach((doc: any) => {
             let name: string = doc.id;
@@ -43,9 +47,8 @@ router.get('/', async (ctx: Context, next: Next) => {
     } catch (err: unknown) {
         // unknown 타입으로 지정된 값은 타입을 먼저 확인한 후에 무언가를 할 수 있다.
         if (err instanceof Error) {
-            ctx.status = 400;
-            ctx.body = { message : err.name };
-            console.error(err.name);
+            ctx.body = { message : err.message };
+            console.error(ctx.status, err.message);
         }
     }
 
@@ -68,14 +71,14 @@ router.post('/create', async (ctx: Context, next: Next) => {
         if (result.writeTime) {
             ctx.response.body = 'Create Success';
         } else {
-            throw result;
+            ctx.status = 400;
+            ctx.throw(result.message);
         }
         await next();
     } catch (err: unknown) {
         if (err instanceof Error) {
-            ctx.status = 400;
             ctx.body = { message : err.message };
-            console.error(err.message);
+            console.error(ctx.status, err.message);
         }
     }
 });
@@ -86,33 +89,33 @@ router.patch('/update', async (ctx: Context, next: Next) => {
         if (result.writeTime) {
             ctx.response.body = 'Update Success';
         } else {
-            throw result;
+            ctx.status = 400;
+            ctx.throw(result.message);
         }
         await next();
     } catch (err: unknown) {
         if (err instanceof Error) {
-            ctx.status ??= 500;
             ctx.body = { message : err.message };
-            console.error(err.name, err.message);
+            console.error(ctx.status, err.message);
         }
     }
 });
 
 router.delete('/delete', async (ctx: Context, next: Next) => {
     try {
-        console.log(ctx.request.body); // 갑자기 body를 받지를 못함.
-        const result = await db.deleteData(ctx.request);
+        console.log(ctx.request.body); // 갑자기 body를 받지를 못함. -> delete에서 payload body를 보낸다는 것 자체가 이상한거일수도...?
+        const result = await db.deleteData(ctx.query.name); // 일단 name 을 query 로 넘겨서 해결 !
         if (result.writeTime) {
             ctx.response.body = 'Delete Success';
         } else {
-            throw result;
+            ctx.status = 400;
+            ctx.throw(result.message); // 첫 번째 인자로 상태코드 주랬는데 깜빡하고 이렇게 썼는데도 잘 된다,,,?
         }
         await next();
     } catch (err: unknown) {
         if (err instanceof Error) {
-            ctx.status ??= 500;
             ctx.body = { message : err.message };
-            console.error(err.name, err.message);
+            console.error(ctx.status, err.message);
         }
     }
 });

@@ -1,15 +1,10 @@
-const firebase = require('./index');
+import { UserDto } from '../dto/user.dto';
 
-interface User {
-    name: string;
-    age: number;
-    address: string;
-    nickname: string;
-}
+const firebase = require('./index');
 
 // 'users' collection 에 'data.name'(이름)으로 doc 관리.
 class Firebase {
-    setData = async (data: User) => {
+    setData = async (data: UserDto) => {
         try {
             const userRef = firebase.collection('users').doc(data.name);
             const doc = await userRef.get();
